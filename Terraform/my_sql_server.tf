@@ -9,6 +9,49 @@ resource "aws_vpc" "ravi-vpc" {
   }
 }
 
+# create a subnet, so that EC2 is give the ip from this subnet, enable public ip so that can connect from internet
+resource "aws_subnet" "ravi-public-subnet" {
+  vpc_id                  = aws_vpc.ravi-vpc.id
+  cidr_block              = "10.123.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "ap-south-1a"
+
+  tags = {
+    Name = "ravi-public-subnet"
+  }
+}
+
+# create IG, to connect VPC
+resource "aws_internet_gateway" "ravi-igw" {
+  vpc_id = aws_vpc.ravi-vpc.id
+
+  tags = {
+    Name = "ravi-igw"
+  }
+}
+
+# create route table
+resource "aws_route_table" "ravi-rt" {
+  vpc_id = aws_vpc.ravi-vpc.id
+
+  tags = {
+    Name = "ravi-public-rt"
+  }
+}
+
+# create default internet open route
+resource "aws_route" "default-route" {
+  route_table_id         = aws_route_table.ravi-rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.ravi-igw.id
+}
+
+# create an association btw rt and subnet and as rt is already having igw and default route with cidr as 0.0.0.0/0. so that subnet will access to internet
+resource "aws_route_table_association" "ravi-rt-association-subnet" {
+  subnet_id      = aws_subnet.ravi-public-subnet.id
+  route_table_id = aws_route_table.ravi-rt.id
+}
+
 # create a sg and allow inboud traffic from your pc to sg and outbound traffic from sg to any ip on the open internet
 resource "aws_security_group" "ravi-sg" {
   name        = "ravi-sg"
@@ -32,12 +75,14 @@ resource "aws_security_group" "ravi-sg" {
 
 }
 
+
 # create EC2
-resource "aws_instance" "ravi-my-sql" {
+resource "aws_instance" "ravi-ec2node_5" {
   instance_type          = "t2.micro"
   ami                    = "ami-079b5e5b3971bd10d"
   key_name               = "ravi-ec2"
   vpc_security_group_ids = [aws_security_group.ravi-sg.id]
+  subnet_id              = aws_subnet.ravi-public-subnet.id
   user_data              = file("user_data.tpl")
 
   root_block_device {
@@ -49,6 +94,3 @@ resource "aws_instance" "ravi-my-sql" {
   }
   
 }
-
-
-
