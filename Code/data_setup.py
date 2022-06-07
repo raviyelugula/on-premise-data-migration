@@ -83,15 +83,12 @@ if __name__ == '__main__':
                         )
                     conn.commit()
                     pbar.update(1)
-
+            conn.close()
             log_message('info', 'data ingestion successfully completed into {table_name}')
+            log_message('info', f'execution completed and Time taken: {datetime.now()-start_time}')
         else:
             log_message('error', 'mqsl not connected')
-        conn.close()
-        log_message('info', f'execution completed and Time taken: {datetime.now()-start_time}')
     except (mysql.Error,mysql.Warning) as e:
-        conn.close()
         log_message('error', f'following sql error: \n{str(e)}') 
-    except Error as e:
-        conn.close()
+    except Exception as e:
         log_message('error', f'following error: \n{str(e)}') 
