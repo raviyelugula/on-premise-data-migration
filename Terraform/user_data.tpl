@@ -5,6 +5,8 @@ pandas==1.3.5
 tqdm==4.64.0
 mysql-connector==2.2.9
 argparse==1.4.0
+sqlalchemy==1.4.37
+pymysql==1.0.2
 EOF
 sudo pip3 install -r py-requirements.txt
 sudo rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2022 && 

@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
             cursor.execute(f'\
                 create table if not exists {table_name}(\
-                    `id` BIGINT,\
+                    `id` BIGINT NOT NULL,\
                     `position` BIGINT,\
                     `name` VARCHAR(1000),\
                     `score` FLOAT,\
@@ -62,13 +62,15 @@ if __name__ == '__main__':
                     `full_address` TEXT,\
                     `zip_code` VARCHAR(100),\
                     `lat` FLOAT,\
-                    `lng` FLOAT \
+                    `lng` FLOAT, \
+                    `last_modified_date` DATE, \
+                    PRIMARY KEY (id)\
                     )\
                 ')
             log_message('info', f'created successfully {table_name} table' )
             cursor.execute(f'ALTER TABLE {table_name} CONVERT TO CHARACTER SET utf8mb4;') 
 
-            sqlQ = f'INSERT INTO mysql.{table_name} VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+            sqlQ = f'INSERT INTO mysql.{table_name} VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
             log_message('info', f'data ingestion started into {table_name} started')
             
             # To get the progress bar using tqdm
@@ -79,12 +81,12 @@ if __name__ == '__main__':
                     # Executemany can ingest chuck of data that is given as a list
                     cursor.executemany(
                         sqlQ,
-                        list(zip(data['id'],data['position'],data['name'],data['score'],data['ratings'],data['category'],data['price_range'],data['full_address'],data['zip_code'],data['lat'],data['lng']))
+                        list(zip(data['id'],data['position'],data['name'],data['score'],data['ratings'],data['category'],data['price_range'],data['full_address'],data['zip_code'],data['lat'],data['lng'],data['last_modified_date']))
                         )
                     conn.commit()
                     pbar.update(1)
             conn.close()
-            log_message('info', 'data ingestion successfully completed into {table_name}')
+            log_message('info', f'data ingestion successfully completed into {table_name}')
             log_message('info', f'execution completed and Time taken: {datetime.now()-start_time}')
         else:
             log_message('error', 'mqsl not connected')
