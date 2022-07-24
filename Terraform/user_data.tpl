@@ -17,8 +17,11 @@ sudo service mysqld start &&
 sleep 60s && 
 pswd="$(sudo grep 'temporary password' /var/log/mysqld.log | cut -d ':' -f4)" &&
 mysql -uroot -p"$(echo$pswd)" --connect-expired-password -e"ALTER USER 'root'@'localhost' IDENTIFIED BY 'root123@PSWD';"
+mysql -uroot -proot123@PSWD -e"CREATE USER 'ravi'@'%' IDENTIFIED BY 'ravi123@PSWD';"
+mysql -uroot -proot123@PSWD -e"GRANT ALL PRIVILEGES ON *.* to ravi@'%' IDENTIFIED BY 'ravi123@PSWD' WITH GRANT OPTION;"
+mysql -uroot -proot123@PSWD -e"create database onpremise;"
+sudo echo "bind-address=0.0.0.0" >> /etc/my.cnf &&
+echo 'updated'
+sudo service mysqld restart 
 echo 'done!!!'
-
-
-
 

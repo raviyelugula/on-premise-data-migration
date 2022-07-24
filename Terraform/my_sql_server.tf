@@ -84,6 +84,7 @@ resource "aws_instance" "ravi-ec2node_5" {
   vpc_security_group_ids = [aws_security_group.ravi-sg.id]
   subnet_id              = aws_subnet.ravi-public-subnet.id
   user_data              = file("user_data.tpl")
+  iam_instance_profile   = "ec2-read-s3"
 
   root_block_device {
     volume_size = 10

@@ -1,9 +1,13 @@
 {
-    "src_path" : "/home/ec2-user/",
+    "src_path" : "../Data/",
     "src_file_name" : "restaurants.csv",
     "trg_table_name" : "restaurants",
     "chunk_size" : 1000,
     "create_ddl" : "create table if not exists restaurants(`id` BIGINT NOT NULL,`position` BIGINT,`name` VARCHAR(1000),`score` FLOAT,`ratings` INT,`category` TEXT,`price_range` VARCHAR(10),`full_address` TEXT,`zip_code` VARCHAR(100),`lat` FLOAT,`lng` FLOAT, `last_modified_date` DATE, PRIMARY KEY (id))",
     "num_cols" : 12,
-    "cols": "id,position,name,score,ratings,category,price_range,full_address,zip_code,lat,lng,last_modified_date"
+    "cols": "id,position,name,score,ratings,category,price_range,full_address,zip_code,lat,lng,last_modified_date",
+    "sql_host":"<public ip of the ec2>",
+    "sql_db":"onpremise",
+    "sql_usr":"ravi",
+    "sql_pswd":"ravi123@PSWD"
 }

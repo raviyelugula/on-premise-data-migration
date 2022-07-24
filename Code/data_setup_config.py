@@ -35,12 +35,16 @@ if __name__ == '__main__':
     file_name = config_details['src_file_name']
     table_name = config_details['trg_table_name']
     chunk_size = int(config_details['chunk_size'])
+    host_name = config_details['sql_host']
+    db_name = config_details['sql_db']
+    usr_name = config_details['sql_usr']
+    pswd = config_details['sql_pswd']
 
     total_records = pd.read_csv(source_path+file_name).shape[0]
     log_message('info', f'trying to ingest {total_records} records into {table_name} table')
 
     try:
-        conn = mysql.connect(host='localhost', database='mysql', user='root', password='root123@PSWD')
+        conn = mysql.connect(host=host_name, database=db_name, user=usr_name, password=pswd)
 
         if conn.is_connected():
 
@@ -64,7 +68,7 @@ if __name__ == '__main__':
             val = val[:-1]
             df_cols = df_cols[:-1]+'))'
 
-            sqlQ = f'INSERT INTO mysql.{table_name} VALUES ({val})'
+            sqlQ = f'INSERT INTO {db_name}.{table_name} VALUES ({val})'
             log_message('info', f'data ingestion started into {table_name} started')
             
             # To get the progress bar using tqdm
