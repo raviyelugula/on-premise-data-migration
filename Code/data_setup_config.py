@@ -1,7 +1,7 @@
 ############################ Objeective ##############################################################################
 ## Delete table if exists & create a table, read csv file, in an optimal way send blocks of records into the table  ##
 ########################### Invoke ###################################################################################
-## python3 data_setup.py --config_name Config/one-time-data-setup.json                                              ##
+## python3 data_setup_config.py --config_name Config/one-time-data-setup.json                                              ##
 ######################################################################################################################
 
 import argparse
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--config_name', required=True)
     args = parser.parse_args()
 
-    with open(args.config) as config:
+    with open(args.config_name) as config:
         config_details = json.load(config)
     
     source_path = config_details['src_path']
@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
             val = ''
             df_cols = 'list(zip('
-            for index in config_details['num_cols']:
+            for index in range(config_details['num_cols']):
                 val = val + '%s,'
                 df_cols = df_cols + f"data['{config_details['cols'].split(',')[index]}'],"
             val = val[:-1]
@@ -75,7 +75,7 @@ if __name__ == '__main__':
                     # Executemany can ingest chuck of data that is given as a list
                     cursor.executemany(
                         sqlQ,
-                        df_cols
+                        eval(df_cols)
                         )
                     conn.commit()
                     pbar.update(1)
