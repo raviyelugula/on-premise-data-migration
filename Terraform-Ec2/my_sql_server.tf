@@ -1,62 +1,85 @@
-# creating a VPC
-resource "aws_vpc" "ravi-vpc" {
+################################################### VPC ###############################################
+# Virtual Private Cloud, enables you to launch AWS resources into a virtual network that you've defined.
+# Here we want to give 65,536 (256*256) ip range n/w, hence choosing n/w of 16 bit and host od 16 bits
+# 16 n/w bits ==> 10.123
+# 16 host bits ==> [0-255].[0-255]
+
+resource "aws_vpc" "my-vpc" {
   cidr_block           = "10.123.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
 
   tags = {
-    Name = "ravi-vpc"
+    Name = "default-vpc"
   }
 }
 
-# create a subnet, so that EC2 is give the ip from this subnet, enable public ip so that can connect from internet
-resource "aws_subnet" "ravi-public-subnet" {
-  vpc_id                  = aws_vpc.ravi-vpc.id
+############################################## SubNet ###############################################
+# Divide VPC into small groups, can give different rules on each subnet thus improving security. 
+# It is a range of IP addresses in your VPC. You can launch AWS resources, such as EC2 instances, into a specific subnet. 
+# When you create a subnet, you specify the IPv4 CIDR block for the subnet, which is a subset of the VPC CIDR block.
+# Subnets can be created in differnt availability_zones 
+# create a subnet with 256 ip range for application-server
+# 24 n/w bits ==> 10.123.1
+# 8 host bits ==> [0-255]
+
+resource "aws_subnet" "app-server-subnet" {
+  vpc_id                  = aws_vpc.my-vpc.id
   cidr_block              = "10.123.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone       = "ap-south-1a"
+  availability_zone       = "us-east-1a"
 
   tags = {
-    Name = "ravi-public-subnet"
+    Name = "app-public-subnet"
   }
 }
 
+############################################ Internet Gateway ##############################################
+# Internet Gateway, allows resources within your VPC to access the internet, and vice versa. 
+# In order for this to happen, there needs to be a routing table entry allowing a subnet to access the IGW.
 # create IG, to connect VPC
-resource "aws_internet_gateway" "ravi-igw" {
-  vpc_id = aws_vpc.ravi-vpc.id
+resource "aws_internet_gateway" "my-igw" {
+  vpc_id = aws_vpc.my-vpc.id
 
   tags = {
-    Name = "ravi-igw"
+    Name = "default-igw"
   }
 }
 
 # create route table
-resource "aws_route_table" "ravi-rt" {
-  vpc_id = aws_vpc.ravi-vpc.id
+resource "aws_route_table" "my-rt" {
+  vpc_id = aws_vpc.my-vpc.id
 
   tags = {
-    Name = "ravi-public-rt"
+    Name = "default-rt"
   }
 }
 
 # create default internet open route
-resource "aws_route" "default-route" {
-  route_table_id         = aws_route_table.ravi-rt.id
+resource "aws_route" "default-internet-route" {
+  route_table_id         = aws_route_table.my-rt.id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.ravi-igw.id
+  gateway_id             = aws_internet_gateway.my-igw.id
 }
 
-# create an association btw rt and subnet and as rt is already having igw and default route with cidr as 0.0.0.0/0. so that subnet will access to internet
-resource "aws_route_table_association" "ravi-rt-association-subnet" {
-  subnet_id      = aws_subnet.ravi-public-subnet.id
-  route_table_id = aws_route_table.ravi-rt.id
+# create an association btw rt and subnet and as rt is already having igw and default route with cidr as 0.0.0.0/0. 
+# so that subnet will access to internet
+resource "aws_route_table_association" "default-rt-association-subnet" {
+  subnet_id      = aws_subnet.app-server-subnet.id
+  route_table_id = aws_route_table.my-rt.id
 }
+
+####################################### Security Group ##############################################################
+# SG acts as a virtual firewall for your EC2 instances to control incoming and outgoing traffic. 
+# These are stateless, meaning any change applied to an incoming rule isn't automatically applied to an outgoing rule.
+# Egress in the world of networking implies traffic that exits an entity or a network boundary, 
+# while Ingress is traffic that enters the boundary of a network.
 
 # create a sg and allow inboud traffic from your pc to sg and outbound traffic from sg to any ip on the open internet
-resource "aws_security_group" "ravi-sg" {
-  name        = "ravi-sg"
+resource "aws_security_group" "app-sg" {
+  name        = "app-server-sg"
   description = "Allow TLS inbound traffic"
-  vpc_id      = aws_vpc.ravi-vpc.id
+  vpc_id      = aws_vpc.my-vpc.id
 
   ingress {
     description = "connect from my PC"
@@ -77,12 +100,12 @@ resource "aws_security_group" "ravi-sg" {
 
 
 # create EC2
-resource "aws_instance" "ravi-ec2node_5" {
+resource "aws_instance" "application-server" {
   instance_type          = "t2.micro"
-  ami                    = "ami-079b5e5b3971bd10d"
-  key_name               = "ravi-ec2"
-  vpc_security_group_ids = [aws_security_group.ravi-sg.id]
-  subnet_id              = aws_subnet.ravi-public-subnet.id
+  ami                    = "ami-090fa75af13c156b4"
+  key_name               = "ravi_pc"
+  vpc_security_group_ids = [aws_security_group.app-sg.id]
+  subnet_id              = aws_subnet.app-server-subnet.id
   user_data              = file("user_data.tpl")
   iam_instance_profile   = "ec2-read-s3"
 
@@ -91,7 +114,7 @@ resource "aws_instance" "ravi-ec2node_5" {
   }
 
   tags = {
-    Name = "ravi-mysql-server"
+    Name = "app-server-mysql"
   }
   
 }
