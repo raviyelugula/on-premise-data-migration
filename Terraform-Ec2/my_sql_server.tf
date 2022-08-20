@@ -83,13 +83,14 @@ resource "aws_security_group" "app-sg" {
 
   ingress {
     description = "connect from my PC"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "TCP"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
+    description = "connect to the internet form EC2"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -98,11 +99,21 @@ resource "aws_security_group" "app-sg" {
 
 }
 
+data "aws_ami" "free-linux-ami" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-kernel-*"]
+  }
+
+  owners = ["137112412989"] # Canonical
+}
 
 # create EC2
 resource "aws_instance" "application-server" {
   instance_type          = "t2.micro"
-  ami                    = "ami-090fa75af13c156b4"
+  ami                    = data.aws_ami.free-linux-ami.id
   key_name               = "ravi_pc"
   vpc_security_group_ids = [aws_security_group.app-sg.id]
   subnet_id              = aws_subnet.app-server-subnet.id
