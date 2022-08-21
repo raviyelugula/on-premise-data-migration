@@ -6,6 +6,14 @@ terraform {
   }
 }
 
+terraform {
+  backend "s3" {
+    bucket = "jenkins-tf-state-files"
+    key    = "opdm/terraform-ec2/state.tfstate"
+    region = "us-east-1"
+  }
+}
+
 # Configuring aws provider using shared creds file
 provider "aws" {
   #shared_credentials_files = ["~/.aws/credentials"]
